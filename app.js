@@ -1,4 +1,4 @@
-import { db } from "/firebase.js";
+import { db } from "./firebase.js";
 import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const locationEl = document.getElementById("location");
