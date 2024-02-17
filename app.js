@@ -1,27 +1,11 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyDzK16GVFZ2CeJ64SUYtyM3efejopksiT0",
-    authDomain: "tracker-e16b3.firebaseapp.com",
-    projectId: "tracker-e16b3",
-    storageBucket: "tracker-e16b3.appspot.com",
-    messagingSenderId: "980268821360",
-    appId: "1:980268821360:web:3b32d8c3cbd73dce3efdb5"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "/firebase.js";
+import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const locationEl = document.getElementById("location");
 const statusEl = document.getElementById("status");
 const trackEl = document.getElementById("track");
 const uploadEl = document.getElementById("upload");
+const downloadEl = document.getElementById("download");
 
 let track = false;
 let upload = false;
@@ -40,6 +24,8 @@ trackEl.onchange = (e) => {
 uploadEl.onchange = (e) => {
     upload = e.target.checked;
 }
+
+downloadEl.onclick = exportData;
 
 function updateTimer() {
     if (!track) {
@@ -86,4 +72,32 @@ function getLocation() {
             console.error("Unable to retrieve your location");
         });
     }
+}
+
+async function exportData() {
+    const response = await getDoc(doc(db, "users", "måns"));
+    const data = await response.data();
+    const coords = data.tracks.map(t => ({
+        lat: Number(t.split(",")[0]),
+        lon: Number(t.split(",")[1]),
+        time: new Date(t.split(",")[2] * 1000)
+    }));
+    
+    let geoJson = {
+        type: "FeatureCollection",
+        features: coords.map(c => ({
+            type: "Feature",
+            properties: {},
+            geometry: {
+                coordinates: [c.lon, c.lat],
+                type: "Point"
+            }
+        }))
+    };
+
+    var a = document.createElement("a");
+    var file = new Blob([JSON.stringify(geoJson)], { type: "text/json" });
+    a.href = URL.createObjectURL(file);
+    a.download = "tracks.json";
+    a.click();
 }
