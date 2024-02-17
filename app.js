@@ -32,7 +32,7 @@ function updateTimer() {
         statusEl.innerText = "Spårar inte";
         return;
     }
-    
+
     statusEl.innerText = "Senaste spårning: " + Math.floor((Date.now() - lastTrack) / 1000) + " sekunder sedan";
 
     setTimeout(updateTimer, 1000);
@@ -42,35 +42,45 @@ function getLocation() {
     if (!track) {
         return;
     }
-    
+
     if (!navigator.geolocation) {
         console.error("Geolocation is not supported by your browser");
     } else {
         setTimeout(getLocation, trackInterval * 1000);
 
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            const timestamp = position.timestamp.toString().slice(0, -3);
-            const str = `${latitude},${longitude},${timestamp}`;
+        navigator.geolocation.getCurrentPosition(
+            //Success
+            async (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const timestamp = position.timestamp.toString().slice(0, -3);
+                const str = `${latitude},${longitude},${timestamp}`;
 
-            console.log(str, Date.now() - lastTrack);
-            locationEl.innerText = `N${latitude} E${longitude}`;
+                console.log(position.coords, Date.now() - lastTrack);
+                locationEl.innerText = `N${latitude} E${longitude}`;
 
-            if (upload) {
-                const månsRef = doc(db, "users", "måns");
+                if (upload) {
+                    const månsRef = doc(db, "users", "måns");
 
-                updateDoc(månsRef, {
-                    tracks: arrayUnion(str)
-                }).then(() => {
-                    console.log("Document successfully written!");
-                });
+                    updateDoc(månsRef, {
+                        tracks: arrayUnion(str)
+                    }).then(() => {
+                        console.log("Document successfully written!");
+                    });
+                }
+
+                lastTrack = Date.now();
+            },
+            //Fail
+            () => {
+                console.error("Unable to retrieve your location");
+            },
+            //Options
+            {
+                timeout: 10000,
+                enableHighAccuracy: true
             }
-
-            lastTrack = Date.now();
-        }, () => {
-            console.error("Unable to retrieve your location");
-        });
+        );
     }
 }
 
@@ -82,7 +92,7 @@ async function exportData() {
         lon: Number(t.split(",")[1]),
         time: new Date(t.split(",")[2] * 1000)
     }));
-    
+
     let geoJson = {
         type: "FeatureCollection",
         features: coords.map(c => ({
