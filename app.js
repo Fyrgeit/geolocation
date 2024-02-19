@@ -20,7 +20,7 @@ trackEl.onchange = (e) => {
         watchId = navigator.geolocation.watchPosition(
             success,
             () => console.error("Unable to retrieve your location"),
-            { timeout: 10000, enableHighAccuracy: true }
+            { enableHighAccuracy: true }
         );
 
         updateTimer();
@@ -50,10 +50,10 @@ async function success(position) {
     const latitude = position.coords.latitude;
     const longitude = position.coords.longitude;
     const timestamp = position.timestamp.toString().slice(0, -3);
-    const str = `${latitude},${longitude},${timestamp}`;
+    const str = [latitude, longitude, timestamp].join(",");
 
-    console.log(position.coords, Date.now() - lastTrack);
-    locationEl.innerText = `N${latitude} E${longitude}`;
+    console.log(position);
+    locationEl.innerText += [new Date(position.timestamp), latitude, longitude, position.coords.accuracy].join(", ") + "\n";
 
     if (upload) {
         const månsRef = doc(db, "users", "måns");
