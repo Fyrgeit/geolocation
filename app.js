@@ -64,7 +64,9 @@ async function success(position) {
             backlog.reduce((sum, obj) => sum + obj.lon, 0) / avgCount,
             Math.floor(backlog.reduce((sum, obj) => sum + obj.time, 0) / avgCount / 1000).toString()
         ].join(",");
-
+        
+        backlog.length = 0;
+        
         if (upload) {
             const månsRef = doc(db, "users", "måns");
 
@@ -76,9 +78,6 @@ async function success(position) {
         } else {
             outputEl.innerText += `Averaged past ${avgCount} backlogs to: "${str}"\n`;
         }
-
-
-        backlog.length = 0;
     }
 
     lastTrack = Date.now();
