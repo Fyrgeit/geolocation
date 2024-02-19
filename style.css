@@ -1,0 +1,29 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100svh;
+}
+
+body {
+    padding: 1rem;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 1rem;
+}
+
+p {
+    margin: 0.2rem 0;
+}
+
+pre {
+    font-family: monospace;
+    border: 1px solid;
+    height: 100%;
+    overflow: scroll;
+}

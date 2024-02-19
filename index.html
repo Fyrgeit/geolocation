@@ -5,27 +5,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="app.js" type="module"></script>
+    <link rel="stylesheet" href="style.css">
     <title>Geolocation</title>
 </head>
 
 <body>
-    <h1>Fantastisk tracker-app</h1>
-    <b>
-        <pre id="location"></pre>
-    </b>
-    <p id="status"></p>
-    <p>
-        <label for="track">Spåra</label>
-        <input type="checkbox" id="track">
-    </p>
-    <p>
+    <section>
+        <h1>Fantastisk tracker-app</h1>
+        <p id="status"></p>
+        <p>
+            <button id="start">Börja spåra</button>
+            <button id="end" disabled>Sluta spåra</button>
+        </p>
+        <p>
 
-        <label for="upload">Ladda upp</label>
-        <input type="checkbox" id="upload">
-    </p>
-    <p>
-        <button id="download">Ladda ner</button>
-    </p>
+            <label for="upload">Ladda upp</label>
+            <input type="checkbox" id="upload">
+        </p>
+        <p>
+            <button id="download">Ladda ner</button>
+        </p>
+    </section>
+    <section>
+        <pre id="output"></pre>
+    </section>
+    <section>
+        <p>v: watchPosition, avg of 5</p>
+    </section>
 </body>
 
 </html>

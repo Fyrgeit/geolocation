@@ -1,32 +1,35 @@
 import { db } from "./firebase.js";
 import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const locationEl = document.getElementById("location");
+const outputEl = document.getElementById("output");
 const statusEl = document.getElementById("status");
-const trackEl = document.getElementById("track");
+const startEl = document.getElementById("start");
+const endEl = document.getElementById("end");
 const uploadEl = document.getElementById("upload");
 const downloadEl = document.getElementById("download");
 
-let track = false;
 let upload = false;
 let lastTrack;
-let trackInterval = 15;
 let watchId;
 
-trackEl.onchange = (e) => {
-    track = e.target.checked;
+let backlog = [];
 
-    if (track) {
-        watchId = navigator.geolocation.watchPosition(
-            success,
-            () => console.error("Unable to retrieve your location"),
-            { enableHighAccuracy: true }
-        );
+startEl.onclick = () => {
+    watchId = navigator.geolocation.watchPosition(
+        success,
+        () => console.error("Unable to retrieve your location"),
+        { enableHighAccuracy: true }
+    );
 
-        updateTimer();
-    } else {
-        navigator.geolocation.clearWatch(watchId);
-    }
+    startEl.setAttribute("disabled", "");
+    endEl.removeAttribute("disabled");
+}
+
+endEl.onclick = () => {
+    navigator.geolocation.clearWatch(watchId);
+
+    endEl.setAttribute("disabled", "");
+    startEl.removeAttribute("disabled");
 }
 
 uploadEl.onchange = (e) => {
@@ -35,34 +38,47 @@ uploadEl.onchange = (e) => {
 
 downloadEl.onclick = exportData;
 
-function updateTimer() {
-    if (!track) {
-        statusEl.innerText = "Spårar inte";
-        return;
-    }
+updateTimer();
 
+function updateTimer() {
     statusEl.innerText = "Senaste spårning: " + Math.floor((Date.now() - lastTrack) / 1000) + " sekunder sedan";
 
     setTimeout(updateTimer, 1000);
 }
 
 async function success(position) {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
-    const timestamp = position.timestamp.toString().slice(0, -3);
-    const str = [latitude, longitude, timestamp].join(",");
+    const posObj = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+        time: position.timestamp
+    }
 
-    console.log(position);
-    locationEl.innerText += [new Date(position.timestamp), latitude, longitude, position.coords.accuracy].join(", ") + "\n";
 
-    if (upload) {
-        const månsRef = doc(db, "users", "måns");
+    backlog.push(posObj);
+    outputEl.innerText += `To backlog: ${new Date(position.timestamp).toTimeString().split(" ")[0]}, ${position.coords.accuracy}\n`;
 
-        updateDoc(månsRef, {
-            tracks: arrayUnion(str)
-        }).then(() => {
-            console.log("Document successfully written!");
-        });
+    const avgCount = 5;
+    if (backlog.length >= avgCount) {
+        const str = [
+            backlog.reduce((sum, obj) => sum + obj.lat, 0) / avgCount,
+            backlog.reduce((sum, obj) => sum + obj.lon, 0) / avgCount,
+            Math.floor(backlog.reduce((sum, obj) => sum + obj.time, 0) / avgCount / 1000).toString()
+        ].join(",");
+
+        if (upload) {
+            const månsRef = doc(db, "users", "måns");
+
+            await updateDoc(månsRef, {
+                tracks: arrayUnion(str)
+            });
+
+            outputEl.innerText += `Averaged past ${avgCount} backlogs to: "${str}" and uploaded\n`;
+        } else {
+            outputEl.innerText += `Averaged past ${avgCount} backlogs to: "${str}"\n`;
+        }
+
+
+        backlog.length = 0;
     }
 
     lastTrack = Date.now();
